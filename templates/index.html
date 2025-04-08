@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+
+<body>
+  <div id="loading-overlay">
+    <svg width="24" height="24" stroke="#FFF" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <g class="spinner-loading">
+        <circle cx="12" cy="12" r="9.5" fill="none" stroke-width="4"></circle>
+      </g>
+    </svg>
+  </div>
+  <div class="container">
+    <p>
+      <div class="alert"></div>
+    </p>
+    <p>
+      Please sign the challenge code with your GitHub Authentication SSH keys and submit<br>请将下列挑战码用 GitHub SSH 身份验证密钥签名并提交
+    </p>
+    <p>UNIX and Windows Git Bash (tap to copy):</p>
+    <code
+		class="command-copy">echo -n <span class="challenge-code">{{ .challengecode }}</span> | ssh-keygen -Y sign -n {{ .namespace }} -f ~/.ssh/&lt;your-key&gt;</code>
+    <p>
+      <label for="username">GitHub username:<br>GitHub 用户名:</label>
+      <input type="text" autocomplete="off" placeholder="JonSnow" id="username" disabled required>
+    </p>
+    <p>
+      <label for="signature">SSH Signature:<br>SSH 签名:</label>
+      <textarea rows="8" autocomplete="off"
+        placeholder="-----BEGIN SSH SIGNATURE-----&#10;XXXXXXXXXXXXXXXXXXXXXXXXXXXXX&#10;-----END SSH SIGNATURE-----"
+        id="signature" disabled required></textarea>
+    </p>
+  </div>
+  <script src="./js/telegram-web-app.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+
+</html>
+

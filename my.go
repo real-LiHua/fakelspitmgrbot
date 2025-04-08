@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/rand"
-	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -13,8 +12,12 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/chatjoinrequest"
-	_ "modernc.org/sqlite"
 )
+
+type Bot struct {
+	bot *gotgbot.Bot
+	db  *Database
+}
 
 func main() {
 	token := os.Getenv("TOKEN")
@@ -50,9 +53,19 @@ func main() {
 		listenAddr = ":8080"
 	}
 
+	db, err := NewDatabase()
+	if err != nil {
+		panic("failed to create new database: " + err.Error())
+	}
+
 	b, err := gotgbot.NewBot(token, nil)
 	if err != nil {
 		panic("failed to create new bot: " + err.Error())
+	}
+
+	bot := Bot{
+		bot: b,
+		db:  db,
 	}
 	dispatcher := ext.NewDispatcher(&ext.DispatcherOpts{
 		Error: func(b *gotgbot.Bot, ctx *ext.Context, err error) ext.DispatcherAction {
@@ -62,20 +75,20 @@ func main() {
 		MaxRoutines: ext.DefaultMaxRoutines,
 	})
 	updater := ext.NewUpdater(dispatcher, nil)
-	dispatcher.AddHandler(handlers.NewCommand("dl", dl))
-	dispatcher.AddHandler(handlers.NewCommand("dl_debug", dl_debug))
-	dispatcher.AddHandler(handlers.NewCommand("ban", ban))
-	dispatcher.AddHandler(handlers.NewCommand("unban", unban))
-	dispatcher.AddHandler(handlers.NewCommand("ban_github", ban_github))
-	dispatcher.AddHandler(handlers.NewCommand("unban_github", unban_github))
+	dispatcher.AddHandler(handlers.NewCommand("dl", bot.commandDownload))
+	dispatcher.AddHandler(handlers.NewCommand("dl_debug", bot.commandDownloadDebug))
+	dispatcher.AddHandler(handlers.NewCommand("ban", bot.commandBan))
+	dispatcher.AddHandler(handlers.NewCommand("unban", bot.commandUnban))
+	dispatcher.AddHandler(handlers.NewCommand("ban_github", bot.commandBanGitHub))
+	dispatcher.AddHandler(handlers.NewCommand("unban_github", bot.commandUnbanGitHub))
 	dispatcher.AddHandler(handlers.NewCommand("start", func(b *gotgbot.Bot, ctx *ext.Context) error {
 		c := strings.SplitN(ctx.Message.Text, " ", 3)
 		if len(c) == 2 {
 			switch c[1] {
 			case "dl":
-				return dl(b, ctx)
+				return bot.commandDownload(b, ctx)
 			case "dl_debug":
-				return dl_debug(b, ctx)
+				return bot.commandDownloadDebug(b, ctx)
 			}
 		}
 		return nil
@@ -104,6 +117,15 @@ func main() {
 	mux.HandleFunc("/", index(webappURL, namespace))
 	mux.HandleFunc("/validate", validate(token))
 	mux.HandleFunc("/submit", submit(namespace))
+	mux.HandleFunc("/css/main.css", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/css/main.css")
+	})
+	mux.HandleFunc("/js/telegram-web-app.js", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/js/telegram-web-app.js")
+	})
+	mux.HandleFunc("/js/main.js", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/js/main.js")
+	})
 	mux.HandleFunc(updaterSubpath, updater.GetHandlerFunc(updaterSubpath))
 
 	server := http.Server{

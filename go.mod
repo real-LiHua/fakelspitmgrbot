@@ -7,9 +7,6 @@ require (
 	golang.org/x/crypto v0.2.0
 	modernc.org/sqlite v1.37.0
 	pault.ag/go/sshsig v0.0.0-20221115041640-a684343203bd
-)
-
-require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

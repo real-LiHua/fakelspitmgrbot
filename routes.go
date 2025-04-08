@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"net/url"
 	"text/template"
-	
+
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 )
 
-var indexTmpl = template.Must(template.ParseFiles("templates/index.html"))
+var indexTmpl = template.Must(template.ParseFiles("static/index.html"))
 
 func index(webappURL, namespace string) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {

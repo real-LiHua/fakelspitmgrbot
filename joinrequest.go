@@ -8,11 +8,11 @@ import (
 )
 
 func JoinRequest(b *gotgbot.Bot, ctx *ext.Context, webappURL string) error {
-	_, err := ctx.EffectiveMessage.Reply(b, fmt.Sprintf("Hello, I'm @%s.\nYou can use me to run a (very) simple telegram webapp demo!", b.User.Username), &gotgbot.SendMessageOpts{
+	_, err := ctx.EffectiveMessage.Reply(b, "Please complete the verification\n请完成验证", &gotgbot.SendMessageOpts{
 		ParseMode: "HTML",
 		ReplyMarkup: gotgbot.InlineKeyboardMarkup{
 			InlineKeyboard: [][]gotgbot.InlineKeyboardButton{{
-				{Text: "Press me", WebApp: &gotgbot.WebAppInfo{Url: webappURL}},
+				{Text: "Verify 验证", WebApp: &gotgbot.WebAppInfo{Url: webappURL}},
 			}},
 		},
 	})

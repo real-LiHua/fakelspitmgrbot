@@ -30,15 +30,13 @@ func NewDatabase() (*Database, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS users (
-			telegram_id INTEGER PRIMARY KEY,
-			github_id INTEGER DEFAULT 0,
-			challenge_code TEXT DEFAULT '',
-			github_username TEXT DEFAULT '',
-			flag INTEGER DEFAULT 0,
-		);
-		`)
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
+				telegram_id INTEGER PRIMARY KEY,
+				github_id INTEGER DEFAULT 0,
+				challenge_code TEXT DEFAULT '',
+				github_username TEXT DEFAULT '',
+				flag INTEGER DEFAULT 0,
+		)`)
 	if err != nil {
 		return nil, err
 	}

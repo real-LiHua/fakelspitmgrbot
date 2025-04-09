@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"reflect"
 
 	"golang.org/x/crypto/ssh"
 	"pault.ag/go/sshsig"
@@ -27,7 +28,7 @@ func (bot *Bot) webappSubmit(w http.ResponseWriter, r *http.Request) {
 	} else if signature, ok := requestBody["signature"].(string); !ok || signature == "" {
 		response["message"] = "invalid signature\n签名无效"
 	} else if err := verifySignature(data, bot.namespace, signature, publicKey); err != nil {
-		response["message"] = "Invalid signature\n签名无效"
+		response["message"] = "Signature verification failed, please try again later\n签名验证失败，请稍后再试"
 	} else if message, err := bot.verifyQualification(username); err != nil {
 		response["message"] = message
 	} else {
@@ -90,10 +91,18 @@ func (bot *Bot) verifyQualification(username string) (string, error) {
 	if err := json.Unmarshal(body, &GitHubInfo); err != nil {
 		return "", err
 	}
+
+	p := reflect.TypeOf(bot)
+	if _, exists := p.MethodByName("Check"); exists {
+		if !bot.Check(GitHubInfo) {
+			return "Your GitHub account is not eligible\n你的GitHub账号不符合要求", errors.New("GitHub account not eligible")
+		}
+	}
+
 	githubID := GitHubInfo["id"].(int64)
 	user := bot.db.GetUserByGithubID(githubID)
 	if user.TelegramID != 0 {
-		return "Already verified\n重复验证", errors.New("Already verified")
+		return "Duplicate entry\n重复授权", errors.New("Duplicate entry")
 	}
 	if user.Flag&FlagBanned != 0 {
 		return "You have been permanently banned\n你已被永久封禁", errors.New("You have been permanently banned")

@@ -13,7 +13,7 @@ func (bot *Bot) commandBan(b *gotgbot.Bot, ctx *ext.Context) error {
 		return nil
 	}
 
-	_, err = ctx.EffectiveChat.BanMember(b, userID, nil)
+	_, err = b.BanChatMember(bot.chatID, userID, nil)
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (bot *Bot) commandBanGitHub(b *gotgbot.Bot, ctx *ext.Context) error {
 	}
 
 	user := bot.db.GetUserByGithubID(userID)
-	_, err = ctx.EffectiveChat.BanMember(b, user.TelegramID, nil)
+	_, err = b.BanChatMember(bot.chatID, user.TelegramID, nil)
 	if err != nil {
 		return err
 	}

@@ -13,28 +13,26 @@ import (
 var indexTmpl = template.Must(template.ParseFiles("static/index.html"))
 
 func (bot *Bot) webappGetUserID(writer http.ResponseWriter, request *http.Request) int64 {
+	response := map[string]string{}
+	errorMessage := "Validation failed, please try again later\n验证失败，请稍后重试"
+	writer.Header().Set("Content-Type", "application/json")
 	authQuery, err := url.ParseQuery(request.Header.Get("X-Auth"))
 	if err != nil {
-		writer.WriteHeader(http.StatusBadRequest)
-		writer.Write([]byte("failed to parse auth query: " + err.Error()))
+		response["message"] = errorMessage
+		json.NewEncoder(writer).Encode(response)
 		return 0
 	}
 	ok, err := ext.ValidateWebAppQuery(authQuery, bot.self.Token)
-	if err != nil {
-		writer.WriteHeader(http.StatusUnauthorized)
-		writer.Write([]byte("validation failed; error: " + err.Error()))
-		return 0
-	}
-	if !ok {
-		writer.WriteHeader(http.StatusUnauthorized)
-		writer.Write([]byte("validation failed; data cannot be trusted."))
+	if err != nil || !ok {
+		response["message"] = errorMessage
+		json.NewEncoder(writer).Encode(response)
 		return 0
 	}
 	var u gotgbot.User
 	err = json.Unmarshal([]byte(authQuery.Get("user")), &u)
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		writer.Write([]byte("failed to unmarshal user: " + err.Error()))
+		response["message"] = errorMessage
+		json.NewEncoder(writer).Encode(response)
 		return 0
 	}
 	return u.Id

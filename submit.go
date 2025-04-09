@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"io"
 	"net/http"
 
@@ -12,46 +13,27 @@ import (
 
 func (bot *Bot) webappSubmit(w http.ResponseWriter, r *http.Request) {
 	var requestBody map[string]interface{}
-
-	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-	username, ok := requestBody["username"].(string)
-	if !ok || username == "" {
-		http.Error(w, "Missing or invalid phone parameter", http.StatusBadRequest)
-		return
-	}
-
-	signature, ok := requestBody["signature"].(string)
-	if !ok || signature == "" {
-		http.Error(w, "Missing or invalid signature parameter", http.StatusBadRequest)
-		return
-	}
-
-	publicKey, err := getPublicKey(username)
-	if err != nil {
-		http.Error(w, "Failed to get public key", http.StatusInternalServerError)
-		return
-	}
-
+	response := map[string]string{}
 	userID := bot.webappGetUserID(w, r)
 	data := bot.db.GetChallengeCode(userID)
-	if err := verifySignature(data, bot.namespace, signature, publicKey); err != nil {
-		http.Error(w, "Invalid signature", http.StatusUnauthorized)
-		return
-	}
 
-	if err := verifyQualification(username); err != nil {
-		http.Error(w, "Invalid qualification", http.StatusUnauthorized)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	response := map[string]string{
-		"message": "Signature verified successfully",
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		response["message"] = "Invalid request body"
+	} else if username, ok := requestBody["username"].(string); !ok || username == "" {
+		response["message"] = "Missing or invalid username parameter\n用户名无效"
+	} else if publicKey, err := getPublicKey(username); err != nil {
+		response["message"] = "Failed to retrieve public key\n获取公钥失败"
+	} else if signature, ok := requestBody["signature"].(string); !ok || signature == "" {
+		response["message"] = "invalid signature\n签名无效"
+	} else if err := verifySignature(data, bot.namespace, signature, publicKey); err != nil {
+		response["message"] = "Invalid signature\n签名无效"
+	} else if message, err := bot.verifyQualification(username); err != nil {
+		response["message"] = message
+	} else {
+		response["ok"] = "200"
 	}
+
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -93,7 +75,28 @@ func verifySignature(data, namespace, signature string, pubKey []byte) error {
 	return nil
 }
 
-func verifyQualification(username string) error {
+func (bot *Bot) verifyQualification(username string) (string, error) {
+	req, err := http.NewRequest("GET", "https://api.github.com/users/"+username, nil)
+	if err != nil {
+		return "", err
+	}
+	defer req.Body.Close()
 
-	return nil
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		return "", err
+	}
+	var GitHubInfo map[string]interface{}
+	if err := json.Unmarshal(body, &GitHubInfo); err != nil {
+		return "", err
+	}
+	githubID := GitHubInfo["id"].(int64)
+	user := bot.db.GetUserByGithubID(githubID)
+	if user.TelegramID != 0 {
+		return "Already verified\n重复验证", errors.New("Already verified")
+	}
+	if user.Flag&FlagBanned != 0 {
+		return "You have been permanently banned\n你已被永久封禁", errors.New("You have been permanently banned")
+	}
+	return "", nil
 }

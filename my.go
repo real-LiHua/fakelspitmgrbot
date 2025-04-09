@@ -15,7 +15,7 @@ import (
 )
 
 type Bot struct {
-	bot       *gotgbot.Bot
+	self      *gotgbot.Bot
 	db        *Database
 	namespace string
 }
@@ -65,7 +65,7 @@ func main() {
 	}
 
 	bot := Bot{
-		bot:       b,
+		self:      b,
 		db:        db,
 		namespace: namespace,
 	}
@@ -117,7 +117,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", bot.webappIndex)
-	mux.HandleFunc("/validate", validate(token))
+	mux.HandleFunc("/validate", bot.webappValidate)
 	mux.HandleFunc("/submit", bot.webappSubmit)
 	mux.HandleFunc("/css/main.css", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/css/main.css")

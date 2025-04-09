@@ -119,10 +119,10 @@ func (db *Database) GetUserByGithubID(githubID int64) User {
 }
 
 func (db *Database) GetChallengeCode(telegramID int64) string {
-	user := db.GetUserByTelegramID(telegramID)
-	if user.ChallengeCode == "" {
-		return ""
+	if telegramID == 0 {
+		db.UpdateChallengeCode(telegramID)
 	}
+	user := db.GetUserByTelegramID(telegramID)
 	return user.ChallengeCode
 }
 

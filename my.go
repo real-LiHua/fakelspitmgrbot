@@ -20,6 +20,7 @@ type Bot struct {
 	self      *gotgbot.Bot
 	db        *Database
 	namespace string
+	chatID    int64
 }
 
 func main() {
@@ -74,6 +75,7 @@ func main() {
 		self:      b,
 		db:        db,
 		namespace: namespace,
+		chatID:    parsedChatID,
 	}
 	dispatcher := ext.NewDispatcher(&ext.DispatcherOpts{
 		Error: func(b *gotgbot.Bot, ctx *ext.Context, err error) ext.DispatcherAction {
@@ -101,7 +103,7 @@ func main() {
 		}
 		return nil
 	}))
-	dispatcher.AddHandler(handlers.NewChatJoinRequest(chatjoinrequest.ChatID(parsedChatID),
+	dispatcher.AddHandler(handlers.NewChatJoinRequest(chatjoinrequest.ChatID(bot.chatID),
 		func(b *gotgbot.Bot, ctx *ext.Context) error {
 			_, err = b.SendMessage(ctx.ChatJoinRequest.UserChatId,
 				"Please complete the verification\n请完成验证",

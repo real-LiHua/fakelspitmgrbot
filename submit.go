@@ -31,8 +31,11 @@ func (bot *Bot) webappSubmit(w http.ResponseWriter, r *http.Request) {
 		response["message"] = "Signature verification failed, please try again later\n签名验证失败，请稍后再试"
 	} else if message, err := bot.verifyQualification(username); err != nil {
 		response["message"] = message
+		bot.self.DeclineChatJoinRequest(bot.chatID, userID, nil)
+		bot.self.BanChatMember(bot.chatID, userID, nil)
 	} else {
 		response["ok"] = "200"
+		bot.self.ApproveChatJoinRequest(bot.chatID, userID, nil)
 	}
 
 	json.NewEncoder(w).Encode(response)
@@ -101,11 +104,12 @@ func (bot *Bot) verifyQualification(username string) (string, error) {
 
 	githubID := GitHubInfo["id"].(int64)
 	user := bot.db.GetUserByGithubID(githubID)
-	if user.TelegramID != 0 {
-		return "Duplicate entry\n重复授权", errors.New("Duplicate entry")
-	}
 	if user.Flag&FlagBanned != 0 {
 		return "You have been permanently banned\n你已被永久封禁", errors.New("You have been permanently banned")
+	}
+	if user.TelegramID != 0 {
+		bot.self.BanChatMember(bot.chatID, user.TelegramID, nil)
+		return "Duplicate entry\n重复授权", errors.New("Duplicate entry")
 	}
 	return "", nil
 }

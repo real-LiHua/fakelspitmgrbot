@@ -5,9 +5,7 @@ import (
 	"encoding/pem"
 	"io"
 	"net/http"
-	"net/url"
 
-	"github.com/PaulSonOfLars/gotgbot/v2"
 	"golang.org/x/crypto/ssh"
 	"pault.ag/go/sshsig"
 )
@@ -15,9 +13,6 @@ import (
 func (bot *Bot) webappSubmit(w http.ResponseWriter, r *http.Request) {
 	var requestBody map[string]interface{}
 
-	authQuery, err := url.ParseQuery(r.Header.Get("X-Auth"))
-	var u gotgbot.User
-	json.Unmarshal([]byte(authQuery.Get("user")), &u)
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -30,7 +25,7 @@ func (bot *Bot) webappSubmit(w http.ResponseWriter, r *http.Request) {
 
 	signature, ok := requestBody["signature"].(string)
 	if !ok || signature == "" {
-		http.Error(w, "无效签名", http.StatusBadRequest)
+		http.Error(w, "Missing or invalid signature parameter", http.StatusBadRequest)
 		return
 	}
 
@@ -40,7 +35,8 @@ func (bot *Bot) webappSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := bot.db.GetChallengeCode(u.Id)
+	userID := bot.webappGetUserID(w, r)
+	data := bot.db.GetChallengeCode(userID)
 	if err := verifySignature(data, bot.namespace, signature, publicKey); err != nil {
 		http.Error(w, "Invalid signature", http.StatusUnauthorized)
 		return
@@ -90,7 +86,7 @@ func verifySignature(data, namespace, signature string, pubKey []byte) error {
 	if err != nil {
 		return err
 	}
-	_, err = sshsig.Verify(publicKey, []byte(namespace), sig.HashAlgorithm, hash, sig)
+	err = sshsig.Verify(publicKey, []byte(namespace), sig.HashAlgorithm, hash, sig)
 	if err != nil {
 		return err
 	}

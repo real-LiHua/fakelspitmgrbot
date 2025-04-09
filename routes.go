@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"text/template"
@@ -43,7 +42,7 @@ func (bot *Bot) webappGetUserID(writer http.ResponseWriter, request *http.Reques
 
 func (bot *Bot) webappIndex(writer http.ResponseWriter, request *http.Request) {
 	userID := bot.webappGetUserID(writer, request)
-	challengeCode := bot.db.GetChallengeCode(userID)
+	challengeCode := bot.db.UpdateChallengeCode(userID)
 	err := indexTmpl.ExecuteTemplate(writer, "index.html", struct {
 		challengecode string
 		namespace     string
@@ -58,9 +57,5 @@ func (bot *Bot) webappIndex(writer http.ResponseWriter, request *http.Request) {
 }
 
 func (bot *Bot) webappValidate(writer http.ResponseWriter, request *http.Request) {
-	userID := bot.webappGetUserID(writer, request)
-	if userID == 0 {
-		return
-	}
-	writer.Write([]byte("validation success"))
+	bot.webappGetUserID(writer, request)
 }

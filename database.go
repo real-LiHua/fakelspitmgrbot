@@ -91,8 +91,8 @@ func (db *Database) UpdateChallengeCode(telegramID int64) string {
 func (db *Database) GetUserByTelegramID(telegramID int64) User {
 	user := User{}
 	err := db.Conn.QueryRow("SELECT * FROM users WHERE telegram_id = ?", telegramID).Scan(
-		&user.GithubID,
 		&user.TelegramID,
+		&user.GithubID,
 		&user.ChallengeCode,
 		&user.GithubUsername,
 		&user.Flag,
@@ -106,8 +106,8 @@ func (db *Database) GetUserByTelegramID(telegramID int64) User {
 func (db *Database) GetUserByGithubID(githubID int64) User {
 	user := User{}
 	err := db.Conn.QueryRow("SELECT * FROM users WHERE github_id = ?", githubID).Scan(
-		&user.GithubID,
 		&user.TelegramID,
+		&user.GithubID,
 		&user.ChallengeCode,
 		&user.GithubUsername,
 		&user.Flag,
@@ -120,7 +120,7 @@ func (db *Database) GetUserByGithubID(githubID int64) User {
 
 func (db *Database) GetChallengeCode(telegramID int64) string {
 	if telegramID == 0 {
-		db.UpdateChallengeCode(telegramID)
+		return db.UpdateChallengeCode(telegramID)
 	}
 	user := db.GetUserByTelegramID(telegramID)
 	return user.ChallengeCode

@@ -12,6 +12,7 @@ import (
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/chatjoinrequest"
+	"github.com/joho/godotenv"
 )
 
 type Bot struct {
@@ -21,6 +22,10 @@ type Bot struct {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error loading .env file")
+	}
 	token := os.Getenv("TOKEN")
 	if token == "" {
 		panic("TOKEN environment variable is empty")

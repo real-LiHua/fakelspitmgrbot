@@ -1,3 +1,4 @@
+// https://lsposed.jasonkhew96.dev/js/main.js
 ;(() => {
   /**
    * @typedef {object} ValidateResponse

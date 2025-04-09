@@ -1,5 +1,8 @@
-# Created by https://www.toptal.com/developers/gitignore/api/linux,macos,windows,vim,go
-# Edit at https://www.toptal.com/developers/gitignore?templates=linux,macos,windows,vim,go
+# Created by https://www.toptal.com/developers/gitignore/api/linux,macos,windows,vim,go,dotenv
+# Edit at https://www.toptal.com/developers/gitignore?templates=linux,macos,windows,vim,go,dotenv
+
+### dotenv ###
+.env
 
 ### Go ###
 # If you prefer the allow list template instead of the deny list, see community template:
@@ -117,4 +120,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/linux,macos,windows,vim,go
+# End of https://www.toptal.com/developers/gitignore/api/linux,macos,windows,vim,go,dotenv

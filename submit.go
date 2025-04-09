@@ -29,13 +29,19 @@ func (bot *Bot) webappSubmit(w http.ResponseWriter, r *http.Request) {
 		response["message"] = "invalid signature\n签名无效"
 	} else if err := verifySignature(data, bot.namespace, signature, publicKey); err != nil {
 		response["message"] = "Signature verification failed, please try again later\n签名验证失败，请稍后再试"
-	} else if message, err := bot.verifyQualification(username); err != nil {
+	} else if githubID, message, err := bot.verifyQualification(username); err != nil {
 		response["message"] = message
 		bot.self.DeclineChatJoinRequest(bot.chatID, userID, nil)
 		bot.self.BanChatMember(bot.chatID, userID, nil)
+		bot.db.BanUser(bot.db.GetUserByGithubID(githubID))
 	} else {
 		response["ok"] = "200"
 		bot.self.ApproveChatJoinRequest(bot.chatID, userID, nil)
+		bot.db.UpdateUser(&User{
+			TelegramID:     userID,
+			GithubID:       githubID,
+			GithubUsername: username,
+		})
 	}
 
 	json.NewEncoder(w).Encode(response)
@@ -79,37 +85,37 @@ func verifySignature(data, namespace, signature string, pubKey []byte) error {
 	return nil
 }
 
-func (bot *Bot) verifyQualification(username string) (string, error) {
+func (bot *Bot) verifyQualification(username string) (int64, string, error) {
 	req, err := http.NewRequest("GET", "https://api.github.com/users/"+username, nil)
 	if err != nil {
-		return "", err
+		return 0, "", err
 	}
 	defer req.Body.Close()
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		return "", err
+		return 0, "", err
 	}
 	var GitHubInfo map[string]interface{}
 	if err := json.Unmarshal(body, &GitHubInfo); err != nil {
-		return "", err
-	}
-
-	p := reflect.TypeOf(bot)
-	if _, exists := p.MethodByName("Check"); exists {
-		if !bot.Check(GitHubInfo) {
-			return "Your GitHub account is not eligible\n你的GitHub账号不符合要求", errors.New("GitHub account not eligible")
-		}
+		return 0, "", err
 	}
 
 	githubID := GitHubInfo["id"].(int64)
+	p := reflect.TypeOf(bot)
+	if _, exists := p.MethodByName("Check"); exists {
+		if !bot.Check(GitHubInfo) {
+			return githubID, "Your GitHub account is not eligible\n你的GitHub账号不符合要求", errors.New("GitHub account not eligible")
+		}
+	}
+
 	user := bot.db.GetUserByGithubID(githubID)
 	if user.Flag&FlagBanned != 0 {
-		return "You have been permanently banned\n你已被永久封禁", errors.New("You have been permanently banned")
+		return githubID, "You have been permanently banned\n你已被永久封禁", errors.New("You have been permanently banned")
 	}
 	if user.TelegramID != 0 {
 		bot.self.BanChatMember(bot.chatID, user.TelegramID, nil)
-		return "Duplicate entry\n重复授权", errors.New("Duplicate entry")
+		return githubID, "Duplicate entry\n重复授权", errors.New("Duplicate entry")
 	}
-	return "", nil
+	return githubID, "", nil
 }

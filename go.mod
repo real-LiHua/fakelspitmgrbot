@@ -1,4 +1,4 @@
-module my
+module github.com/real-LiHua/fakelspitmgrbot
 
 go 1.24.2
 

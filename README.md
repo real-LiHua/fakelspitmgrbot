@@ -4,10 +4,9 @@
 
 ## 安装
 
-1. 克隆仓库：
+1. 安装：
    ```bash
-   git clone https://github.com/real-LiHua/fakelspitmgrbot
-   cd fakelspitmgrbot
+   go install github.com/real-LiHua/fakelspitmgrbot
    ```
 
 2. 在项目根目录创建 `.env` 文件，添加以下变量：
@@ -22,7 +21,7 @@
 
 3. 运行机器人：
    ```bash
-   go run .
+   "`go env GOPATH`/bin/fakelspitmgrbot"
    ```
 
 ## 使用方法

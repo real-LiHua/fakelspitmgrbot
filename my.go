@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -102,7 +103,19 @@ func main() {
 	}))
 	dispatcher.AddHandler(handlers.NewChatJoinRequest(chatjoinrequest.ChatID(parsedChatID),
 		func(b *gotgbot.Bot, ctx *ext.Context) error {
-			return JoinRequest(b, ctx, webappURL)
+			_, err = b.SendMessage(ctx.ChatJoinRequest.UserChatId,
+				"Please complete the verification\n请完成验证",
+				&gotgbot.SendMessageOpts{
+					ReplyMarkup: gotgbot.InlineKeyboardMarkup{
+						InlineKeyboard: [][]gotgbot.InlineKeyboardButton{{
+							{Text: "Verify 验证", WebApp: &gotgbot.WebAppInfo{Url: webappURL}},
+						}},
+					},
+				})
+			if err != nil {
+				return fmt.Errorf("failed to send start message: %w", err)
+			}
+			return nil
 		}))
 
 	err = updater.AddWebhook(b, b.Token, &ext.AddWebhookOpts{SecretToken: webhookSecret})

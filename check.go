@@ -30,3 +30,7 @@ func check(b *gotgbot.Bot, ctx *ext.Context) (int64, string, error) {
 	}
 	return userID, c[2], nil
 }
+
+func (bot *Bot) Check(GitHubInfo map[string]interface{}) bool {
+	return false
+}

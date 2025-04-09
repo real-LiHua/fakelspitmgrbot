@@ -16,7 +16,7 @@ func (bot *Bot) commandUnban(b *gotgbot.Bot, ctx *ext.Context) error {
 	if err != nil {
 		return err
 	}
-	ctx.EffectiveMessage.Reply(b, fmt.Sprint("User %s unbanned", userID), nil)
+	ctx.EffectiveMessage.Reply(b, fmt.Sprint("User %d unbanned", userID), nil)
 	bot.db.UnbanUser(bot.db.GetUserByTelegramID(userID))
 	return nil
 }
@@ -32,8 +32,7 @@ func (bot *Bot) commandUnbanGitHub(b *gotgbot.Bot, ctx *ext.Context) error {
 	if err != nil {
 		return err
 	}
-	ctx.EffectiveMessage.Reply(b, fmt.Sprint("Github user %s unbanned", userID), nil)
+	ctx.EffectiveMessage.Reply(b, fmt.Sprint("Github user %d unbanned", userID), nil)
 	bot.db.UnbanUser(user)
-
 	return nil
 }

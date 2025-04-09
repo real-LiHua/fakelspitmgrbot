@@ -118,6 +118,14 @@ func (db *Database) GetUserByGithubID(githubID int64) User {
 	return user
 }
 
+func (db *Database) GetChallengeCode(telegramID int64) string {
+	user := db.GetUserByTelegramID(telegramID)
+	if user.ChallengeCode == "" {
+		return ""
+	}
+	return user.ChallengeCode
+}
+
 func (db *Database) BanUser(user User) error {
 	if user.GithubID == 0 {
 		return nil

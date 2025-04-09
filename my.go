@@ -15,8 +15,9 @@ import (
 )
 
 type Bot struct {
-	bot *gotgbot.Bot
-	db  *Database
+	bot       *gotgbot.Bot
+	db        *Database
+	namespace string
 }
 
 func main() {
@@ -64,8 +65,9 @@ func main() {
 	}
 
 	bot := Bot{
-		bot: b,
-		db:  db,
+		bot:       b,
+		db:        db,
+		namespace: namespace,
 	}
 	dispatcher := ext.NewDispatcher(&ext.DispatcherOpts{
 		Error: func(b *gotgbot.Bot, ctx *ext.Context, err error) ext.DispatcherAction {
@@ -114,9 +116,9 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", index(webappURL, namespace))
+	mux.HandleFunc("/", bot.webappIndex)
 	mux.HandleFunc("/validate", validate(token))
-	mux.HandleFunc("/submit", submit(namespace))
+	mux.HandleFunc("/submit", bot.webappSubmit)
 	mux.HandleFunc("/css/main.css", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/css/main.css")
 	})

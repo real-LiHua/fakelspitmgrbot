@@ -12,7 +12,7 @@ import (
 
 var indexTmpl = template.Must(template.ParseFiles("static/index.html"))
 
-func (bot *Bot) webappGetUserID(writer http.ResponseWriter, request *http.Request) int64 {
+func (bot *Bot) webappValidateAndGetUserID(writer http.ResponseWriter, request *http.Request) int64 {
 	response := map[string]string{}
 	errorMessage := "Validation failed, please try again later\n验证失败，请稍后重试"
 	writer.Header().Set("Content-Type", "application/json")
@@ -39,7 +39,7 @@ func (bot *Bot) webappGetUserID(writer http.ResponseWriter, request *http.Reques
 }
 
 func (bot *Bot) webappIndex(writer http.ResponseWriter, request *http.Request) {
-	userID := bot.webappGetUserID(writer, request)
+	userID := bot.webappValidateAndGetUserID(writer, request)
 	challengeCode := bot.db.UpdateChallengeCode(userID)
 	err := indexTmpl.ExecuteTemplate(writer, "index.html", struct {
 		challengecode string
@@ -55,5 +55,5 @@ func (bot *Bot) webappIndex(writer http.ResponseWriter, request *http.Request) {
 }
 
 func (bot *Bot) webappValidate(writer http.ResponseWriter, request *http.Request) {
-	bot.webappGetUserID(writer, request)
+	bot.webappValidateAndGetUserID(writer, request)
 }

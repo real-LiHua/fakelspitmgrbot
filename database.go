@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"database/sql"
+	"fmt"
 
 	_ "modernc.org/sqlite"
 )
@@ -86,9 +87,10 @@ func (db *Database) UpdateChallengeCode(telegramID int64) string {
 	return challengeCode
 }
 
-func (db *Database) GetUserByTelegramID(telegramID int64) User {
+func (db *Database) GetUserByField(field string, value interface{}) User {
 	user := User{}
-	err := db.Conn.QueryRow("SELECT * FROM users WHERE telegram_id = ?", telegramID).Scan(
+	query := fmt.Sprintf("SELECT * FROM users WHERE %s = ?", field)
+	err := db.Conn.QueryRow(query, value).Scan(
 		&user.TelegramID,
 		&user.GithubID,
 		&user.ChallengeCode,
@@ -101,19 +103,12 @@ func (db *Database) GetUserByTelegramID(telegramID int64) User {
 	return user
 }
 
+func (db *Database) GetUserByTelegramID(telegramID int64) User {
+	return db.GetUserByField("telegram_id", telegramID)
+}
+
 func (db *Database) GetUserByGithubID(githubID int64) User {
-	user := User{}
-	err := db.Conn.QueryRow("SELECT * FROM users WHERE github_id = ?", githubID).Scan(
-		&user.TelegramID,
-		&user.GithubID,
-		&user.ChallengeCode,
-		&user.GithubUsername,
-		&user.Flag,
-	)
-	if err != nil {
-		return User{}
-	}
-	return user
+	return db.GetUserByField("github_id", githubID)
 }
 
 func (db *Database) GetChallengeCode(telegramID int64) string {

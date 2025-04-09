@@ -15,7 +15,7 @@ import (
 func (bot *Bot) webappSubmit(w http.ResponseWriter, r *http.Request) {
 	var requestBody map[string]interface{}
 	response := map[string]string{}
-	userID := bot.webappGetUserID(w, r)
+	userID := bot.webappValidateAndGetUserID(w, r)
 	data := bot.db.GetChallengeCode(userID)
 
 	w.Header().Set("Content-Type", "application/json")

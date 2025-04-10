@@ -114,7 +114,13 @@ func (bot *Bot) verifyQualification(username string) (int64, string, error) {
 		return githubID, "You have been permanently banned\n你已被永久封禁", errors.New("You have been permanently banned")
 	}
 	if user.TelegramID != 0 {
+		// 发送提示，顺便判断是否为 Deteled Account
+		_, err = bot.self.SendMessage(user.TelegramID, "Duplicate entry\n重复授权", nil)
 		bot.self.BanChatMember(bot.chatID, user.TelegramID, nil)
+		if err.Error() == "Bad Request: chat not found" {
+			bot.self.UnbanChatMember(bot.chatID, user.TelegramID, nil)
+			return githubID, "", nil
+		}
 		return githubID, "Duplicate entry\n重复授权", errors.New("Duplicate entry")
 	}
 	return githubID, "", nil
